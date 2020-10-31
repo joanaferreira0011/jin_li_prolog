@@ -13,33 +13,38 @@ print_cell(C):-
 /* ---------- BOARD PIECES ---------- */
 
 /* 
-    Red koi
+    Empty space.
+*/
+code(0, '0'). 
+
+/* 
+    Red koi.
     Total count: 2 
 */
-code(0, 'R'). 
+code(1, 'R'). 
 
 /* 
-    Yellow koi
+    Yellow koi.
     Total count: 2
 */
-code(1, 'Y').
+code(2, 'Y').
 
 /* 
-    Stone
+    Stone.
     Total count: 20
 */
-code(2, 'S').
+code(3, 'S').
 
 /* 
-    Red counter
+    Red counter.
     Total count: 1
 */
-code(3, 'r').
+code(4, 'r').
 
 /* 
-    Yellow counter
+    Yellow counter.
     Total count: 1
 */
-code(4, 'y').
+code(5, 'y').
 
 /* --------------------------------------- */
