@@ -140,14 +140,39 @@ choose_list_elem(List, String, Index) :-
 	print_list_elems(List),
 	get_user_input_number(Index),
 	own_nth(Index, List, _X).
+
+unique([], Unique, Unique).
+unique([X | Rest], Unique, Acc) :-
+	\+ member(X, Acc),
+	append(Acc, [X], NewAcc),
+	unique(Rest, Unique, NewAcc).
 	
-	
+unique([X | Rest], Unique, Acc) :-
+	member(X, Acc),
+	unique(Rest, Unique, Acc).
+
+unique(List, Unique) :-
+	unique(List, Unique, []).
+
+nextTurn(1,2).
+nextTurn(2,1).
 play_human_v_human(Board, CurrentPlayer, Red-Yellow) :-
 	print_game(Board, Red, Yellow),
-	current_player_koi(CurrentPlayer , Board, _Koi),
-	write(_Koi),
-	nl,
-	choose_list_elem(_Koi, 'Choose a Koi to move', KoiIndex).
+	findall(X-Y, move_koi(Board-CurrentPlayer, X-Y-_-_, F), _Koi),
+	unique(_Koi, Koi),
+	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
+	own_nth(KoiIndex, Koi, ToMove),
+	!,
+	ToMoveX-ToMoveY = ToMove,
+	findall(X-Y, move_koi(Board-CurrentPlayer, ToMoveX-ToMoveY-X-Y, F), _NewPos),
+	
+	unique(_NewPos, NewPos),
+	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
+	own_nth(NewPosIndex, NewPos, NewPosVal),
+	NewX-NewY = NewPosVal,	
+	move_koi(Board-CurrentPlayer, X-Y-NewX-NewY, NewBoard),
+	nextTurn(CurrentPlayer, NextTurn),
+	play_human_v_human(NewBoard, NextTurn, Red-Yellow).
 	
 	
 /* ---------- GAME STATES ---------- */	
@@ -209,3 +234,66 @@ print_line([C | L]):-
 print_cell(C):-
     code(C,P),
     write(P), write(' | ').
+	
+	
+small_board([[1,0,1], [0,0,0], [0,1,0]]).
+element_at_pos(Board, X-Y, Elem) :-
+	own_nth(X, Board, Row),
+	own_nth(Y, Row, Elem).
+
+absolute(X, Abs) :-
+	Av is X,
+	Av < 0,
+	Abs is -Av.
+	
+absolute(X, Abs) :-
+	Av is X,
+	Av >= 0,
+	Abs is Av.
+
+rock_coords(Board, OldX-OldY-NewX-NewY, 2-0-DeltaY, RockX-RockY) :-
+	RockX is NewX,
+	RockY is (OldY+NewY)//2.
+
+rock_coords(Board, OldX-OldY-NewX-NewY, 2-DeltaX-0, RockX-RockY) :-
+	RockX is (OldX+NewX)//2,
+	RockY is NewY.
+	
+rock_coords(Board, OldX-OldY-NewX-NewY, TotalDelta-Delta-Delta, RockX-RockY) :-
+	RockX is (OldX+NewX)//2,
+	RockY is (OldY+NewY)//2.
+	
+is_jump_okay( _, _, 1-_-_).
+is_jump_okay( _, _, 2-X-X).
+is_jump_okay(Board, OldX-OldY-NewX-NewY, TotalDelta-DeltaX-DeltaY) :-
+	rock_coords(Board, OldX-OldY-NewX-NewY, TotalDelta-DeltaX-DeltaY, RockX-RockY),
+	own_nth(RockX, Board, Row),
+	own_nth(RockY, Row, 3).
+
+	
+replace_matrix_element([CurrentRow| NextRows], X-Y, NewElem, [CurrentRow | Tail]) :-
+	X > 0,
+	DecX is X-1,
+	replace_matrix_element(NextRows, DecX-Y, NewElem, Tail).
+
+replace_matrix_element([CurrentRow | NextRows], 0-Y, NewElem, [NewRow | NextRows]) :-
+	length(CurrentRow, RowLength),
+	append(Left, [_ | Right], CurrentRow),
+	length(Left, Y),
+	append(Left, [NewElem | Right], NewRow).
+	
+move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
+	own_nth(OldX, Board, Row),
+	own_nth(OldY, Row, CurrentPlayer),
+	own_nth(NewX, Board, NewRow),
+	own_nth(NewY, NewRow, 0),
+	
+	absolute(NewX-OldX, DeltaX),
+	absolute(NewY-OldY, DeltaY),
+	
+	TotalDelta is DeltaX+DeltaY,
+	
+	member(TotalDelta, [1,2,4]),
+	is_jump_okay(Board, OldX-OldY-NewX-NewY, TotalDelta-DeltaX-DeltaY),
+	replace_matrix_element(Board, OldX-OldY, 0, _NewBoard),
+	replace_matrix_element(_NewBoard, NewX-NewY, CurrentPlayer, NewBoard).
