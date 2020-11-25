@@ -86,17 +86,74 @@ get_user_play(X,Y) :-
 	
 	
 	
-/* ---------- GAME STATES ---------- */
+/* ---------- Player Moves ---------- */
 
+own_nth(0, [Element | _Tail], Element).
 
+own_nth(Index, [_CurElement | _Tail], Element) :-
+	nonvar(Index),
+	NewIndex is Index-1,
+	own_nth(NewIndex, _Tail, Element).
 	
-play :- 
-	create_board(_X, 7),
-	print_game(_X, 0, 0),
-	get_user_play(X, Y),
+own_nth(Index, [_CurElement | _Tail], Element) :-
+	var(Index), 
+	own_nth(NewIndex, _Tail, Element),
+	Index is NewIndex+1.
+
+add_current_row(_, [], []).
+add_current_row(RowIndex, [X | _Tail], [RowIndex-X | _Rest]) :-
+	add_current_row(RowIndex, _Tail, _Rest).
+	
+	
+current_player_koi_accm(_A, _B, _C, KoiAcc, KoiAcc) :-
+	length(KoiAcc, 2).
+
+current_player_koi_accm(CurrentPlayer, [Row | NextRows], CurrentRowIndex, Koi, KoiAcc) :-
+	findall(X, own_nth(X, Row, CurrentPlayer), Bag),
+	add_current_row(CurrentRowIndex, Bag, PlayerKoi),
+	
+	append(KoiAcc, PlayerKoi, NewAcc),
+	NewRow is CurrentRowIndex+1,
+	current_player_koi_accm(CurrentPlayer, NextRows, NewRow, Koi, NewAcc).
+
+
+current_player_koi(CurrentPlayer, Board, Koi) :-
+	current_player_koi_accm(CurrentPlayer, Board, 0, Koi, []).
+	
+print_list_elems_intern([], _).
+print_list_elems_intern([X | _Tail], Index) :-
+	write(Index),
+	write(' - '),
 	write(X),
 	nl,
-	write(Y).
+	NewIndex is Index+1,
+	print_list_elems_intern(_Tail, NewIndex).
+	
+print_list_elems(L):-
+	print_list_elems_intern(L, 0).
+	
+	
+choose_list_elem(List, String, Index) :-
+	repeat,
+	write(String),
+	nl,
+	print_list_elems(List),
+	get_user_input_number(Index),
+	own_nth(Index, List, _X).
+	
+	
+play_human_v_human(Board, CurrentPlayer, Red-Yellow) :-
+	print_game(Board, Red, Yellow),
+	current_player_koi(CurrentPlayer , Board, _Koi),
+	write(_Koi),
+	nl,
+	choose_list_elem(_Koi, 'Choose a Koi to move', KoiIndex).
+	
+	
+/* ---------- GAME STATES ---------- */	
+play :- 
+	create_board(_X, 10),
+	play_human_v_human(_X, 1, 0-0).
 
 middleBoard([
 					[3, 0, 0, 0, 0, 0, 0],
