@@ -6,11 +6,9 @@ code(0, '.').
 
 /* Red koi. Total count: 2. */
 code(1, 'R'). 
-red_koi(1).
 
 /* Yellow koi. Total count: 2. */
 code(2, 'Y').
-yellow_koi(2).
 
 /* Stone. Total count: 20. */
 code(3, '*').
@@ -308,13 +306,11 @@ move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
 
 game_over(YellowScore-RedScore, Winner):-
 	YellowScore >= 10,
-	Winner is 'Yellow',
-	write('Yellow').
+	Winner is 'Yellow'.
 
 game_over(YellowScore-RedScore, Winner):-
 	RedScore >= 10,
-	Winner is 'Red',
-	write('Red').
+	Winner is 'Red'.
 
 get_adjacent_kois(Board, Y-X, NumberKois):-
 	UpperRow is X-1,
@@ -328,15 +324,33 @@ get_adjacent_kois(Board, Y-X, NumberKois):-
 	NumberKois is (IsKoiUp + IsKoiDown + IsKoiRight + IsKoiLeft),
 	write(NumberKois).
 
+% Koi.
 get_koi_pos(Board, Y-X, IsKoi):-
+	X>=0,
+	Y>=0,
+	X<7,
+	Y<7,
 	nth0(X, Board, Row),
 	nth0(Y, Row, Elem),
-	(Elem == 1; Elem == 2), 
+	(Elem == 1; Elem == 2), !,
 	IsKoi is 1.
 
+% Not a koi.
 get_koi_pos(Board, Y-X, IsKoi):-
+	X>=0, 
+	Y>=0,
+	X<7,
+	Y<7,
 	nth0(X, Board, Row),
 	nth0(Y, Row, Elem),
-	Elem \= 1,
-	Elem \= 2, 
+	Elem \== 1,
+	Elem \== 2, !,
+	IsKoi is 0.
+
+% Pos is outside the Board boundaries
+get_koi_pos(Board, Y-X, IsKoi):-
+	(X<0; 
+	Y<0;
+	X>=7;
+	Y>=7), !,
 	IsKoi is 0.
