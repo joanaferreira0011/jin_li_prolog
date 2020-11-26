@@ -1,3 +1,4 @@
+:- use_module(library(lists)).
 /* ---------- BOARD PIECES ---------- */
 
 /* Empty space. */
@@ -5,12 +6,16 @@ code(0, '.').
 
 /* Red koi. Total count: 2. */
 code(1, 'R'). 
+red_koi(1).
 
 /* Yellow koi. Total count: 2. */
 code(2, 'Y').
+yellow_koi(2).
 
 /* Stone. Total count: 20. */
 code(3, '*').
+
+
 
 
 /* ---------- BOARD CREATION ---------- */
@@ -216,7 +221,7 @@ print_game([L|T], YellowScore, RedScore):-
     nl,
     print_board([L|T]),
     nl,
-	print_score('Yellow', YellowScore),
+	print_score('Yell', YellowScore),
 	print_score('Red', RedScore).
 
 print_score(Player, Score):-
@@ -297,3 +302,41 @@ move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
 	is_jump_okay(Board, OldX-OldY-NewX-NewY, TotalDelta-DeltaX-DeltaY),
 	replace_matrix_element(Board, OldX-OldY, 0, _NewBoard),
 	replace_matrix_element(_NewBoard, NewX-NewY, CurrentPlayer, NewBoard).
+
+
+/* GAME SCORE LOGIC */
+
+game_over(YellowScore-RedScore, Winner):-
+	YellowScore >= 10,
+	Winner is 'Yellow',
+	write('Yellow').
+
+game_over(YellowScore-RedScore, Winner):-
+	RedScore >= 10,
+	Winner is 'Red',
+	write('Red').
+
+get_adjacent_kois(Board, Y-X, NumberKois):-
+	UpperRow is X-1,
+	LowerRow is X+1,
+	RightCol is Y+1,
+	LeftCol is Y-1,
+	get_koi_pos(Board, Y-UpperRow, IsKoiUp),
+	get_koi_pos(Board, Y-LowerRow, IsKoiDown),
+	get_koi_pos(Board, RightCol-X, IsKoiRight),
+	get_koi_pos(Board, LeftCol-X, IsKoiLeft),
+	NumberKois is (IsKoiUp + IsKoiDown + IsKoiRight + IsKoiLeft),
+	write(NumberKois).
+
+get_koi_pos(Board, Y-X, IsKoi):-
+	nth0(X, Board, Row),
+	nth0(Y, Row, Elem),
+	(Elem == 1; Elem == 2), 
+	IsKoi is 1.
+
+get_koi_pos(Board, Y-X, IsKoi):-
+	nth0(X, Board, Row),
+	nth0(Y, Row, Elem),
+	Elem \= 1,
+	Elem \= 2, 
+	IsKoi is 0.
