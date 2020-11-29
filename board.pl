@@ -446,3 +446,22 @@ value(YellowScore-RedScore, 2, Value):-
 value(YellowScore-RedScore, 1, Value):-
 	MaxScore is max(YellowScore, RedScore),
 	Value is (RedScore-YellowScore) * MaxScore.
+
+
+valid_swim_moves(Board, X-Y, ListOfMoves):-
+	findall(
+		NewX-NewY,
+		(
+		element_at_pos(Board, NewX-NewY, Elem),
+		Elem \= 1, % Elem is not koi.
+		Elem \= 2, % Elem is not koi.
+		Elem \= 3, % Elem is not stone.
+		(NewX \= X; NewY\= Y), % Not the same pos.
+		DeltaX is X-NewX,
+		DeltaY is Y-NewY,
+		absolute(DeltaX, AbsX),
+		absolute(DeltaY, AbsY),
+		AbsX =< 1,
+		AbsY =< 1
+		),
+		ListOfMoves).
