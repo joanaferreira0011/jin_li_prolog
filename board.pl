@@ -423,20 +423,33 @@ value(YellowScore-RedScore, 1, Value):-
 	Value is (RedScore-YellowScore) * MaxScore.
 
 
-valid_swim_moves(Board, X-Y, ListOfMoves):-
-	findall(
+valid_moves(Board, X-Y, ListOfMoves):-
+	setof(
 		NewX-NewY,
 		(
 		element_at_pos(Board, NewX-NewY, Elem),
-		Elem \= 1, % Elem is not koi.
-		Elem \= 2, % Elem is not koi.
-		Elem \= 3, % Elem is not stone.
-		(NewX \= X; NewY\= Y), % Not the same pos.
-		DeltaX is X-NewX,
-		DeltaY is Y-NewY,
-		absolute(DeltaX, AbsX),
-		absolute(DeltaY, AbsY),
-		AbsX =< 1,
-		AbsY =< 1
+		(valid_swim_move(X-Y-NewX-NewY, Elem);
+		valid_jump_move(Board, X-Y-NewX-NewY, Elem))
 		),
 		ListOfMoves).
+
+valid_swim_move(X-Y-NewX-NewY, Elem):-
+	Elem \= 1, % Elem is not koi.
+	Elem \= 2, % Elem is not koi.
+	Elem \= 3, % Elem is not stone.
+	(NewX \= X; NewY\= Y), % Not the same pos.
+	DeltaX is X-NewX,
+	DeltaY is Y-NewY,
+	absolute(DeltaX, AbsX),
+	absolute(DeltaY, AbsY),
+	AbsX =< 1,
+	AbsY =< 1.
+
+valid_jump_move(Board, X-Y-NewX-NewY, Elem):-
+	Elem \= 1, % Elem is not koi.
+	Elem \= 2, % Elem is not koi.
+	Elem \= 3, % Elem is not stone.
+	DeltaX is X-NewX,
+	DeltaY is Y-NewY,
+	TotalDelta is DeltaX+DeltaY,
+	is_jump_okay(Board, X-Y-NewX-NewY, TotalDelta-DeltaX-DeltaY).
