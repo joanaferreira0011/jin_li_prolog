@@ -436,4 +436,12 @@ move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-Ne
 	place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks,  RockX-RockY, NewBoard-NewRedRocks-NewYellowRocks),
 	update_scores(CurrentPlayer, NewBoard, NewX-NewY, RedScore-YellowScore-NewRedScore-NewYellowScore).
 	
-	
+
+% VALUE FUNCTIONS - value(+YellowScore-RedScore, +Player, -Value)
+value(YellowScore-RedScore, 2, Value):-
+	MaxScore is max(YellowScore, RedScore),
+	Value is (YellowScore-RedScore) * MaxScore.
+
+value(YellowScore-RedScore, 1, Value):-
+	MaxScore is max(YellowScore, RedScore),
+	Value is (RedScore-YellowScore) * MaxScore.
