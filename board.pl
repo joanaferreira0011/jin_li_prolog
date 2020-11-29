@@ -218,7 +218,7 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	own_nth(KoiIndex, Koi, ToMove),
 	!,
 	ToMoveX-ToMoveY = ToMove,
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
+	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, _), _NewPos),
 	unique(_NewPos, NewPos),
 	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
 	
@@ -264,7 +264,7 @@ play_loop([CurrentPlay , NextPlay], GameState) :-
 /* ---------- GAME STATES ---------- */	
 play :- 
 	create_board(_X, 10),
-	play_loop([[play_human], [play_human]], _X-1-10-10-10-0).
+	play_loop([[play_human], [play_human]], _X-1-10-10-0-0).
 	
 	
 play_v_bot :-
@@ -337,15 +337,15 @@ absolute(X, Abs) :-
 	Av >= 0,
 	Abs is Av.
 
-rock_coords(Board, OldX-OldY-NewX-NewY, 2-0-DeltaY, RockX-RockY) :-
+rock_coords(_, _-OldY-NewX-NewY, 2-0-_, RockX-RockY) :-
 	RockX is NewX,
 	RockY is (OldY+NewY)//2.
 
-rock_coords(Board, OldX-OldY-NewX-NewY, 2-DeltaX-0, RockX-RockY) :-
+rock_coords(_, OldX-_-NewX-NewY, 2-_-0, RockX-RockY) :-
 	RockX is (OldX+NewX)//2,
 	RockY is NewY.
 	
-rock_coords(Board, OldX-OldY-NewX-NewY, TotalDelta-Delta-Delta, RockX-RockY) :-
+rock_coords(_, OldX-OldY-NewX-NewY, _-Delta-Delta, RockX-RockY) :-
 	RockX is (OldX+NewX)//2,
 	RockY is (OldY+NewY)//2.
 	
@@ -385,11 +385,11 @@ move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
 
 % game_over(+YellowScore-RedScore, -Player).
 % Yellow is the winner.
-game_over(RedScore-YellowScore,  2):-
+game_over(_-YellowScore,  2):-
 	YellowScore >= 10.
 
 % Red is the winner.
-game_over(RedScore-YellowScore, 1):-
+game_over(RedScore-_, 1):-
 	RedScore >= 10.
 
 get_adjacent_kois(Board, X-Y, NumberKois):-
@@ -425,7 +425,7 @@ decrease_rocks(2, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks):-
 can_place_rock_delta_check(1, _).
 can_place_rock_delta_check(2, 1-1).
 
-cant_place_rock(CurrentPlayer, [n,n], OldX-OldY-NewX-NewY)	:-
+cant_place_rock(_, [n,n], OldX-OldY-NewX-NewY)	:-
 	DeltaX is NewX-OldX,
 	DeltaY is NewY-OldY,
 	absolute(DeltaX, AbsX),
