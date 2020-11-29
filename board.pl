@@ -411,34 +411,10 @@ value(YellowScore-RedScore, 1, Value):-
 	MaxScore is max(YellowScore, RedScore),
 	Value is (RedScore-YellowScore) * MaxScore.
 
+% Returns in ListOfMoves a list of [KoiX-KoiY-NewX-NewY], where KoiX and KoiY are coordinates of a Koi.
+valid_moves(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, CurrentPlayer, ListOfMoves):-
+	findall(KoiX-KoiY-NewX-NewY, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, KoiX-KoiY-NewX-NewY-_-_, _), _Moves),
+	unique(_Moves, ListOfMoves).
 
-valid_moves(Board, X-Y, ListOfMoves):-
-	setof(
-		NewX-NewY,
-		(
-		element_at_pos(Board, NewX-NewY, Elem),
-		(valid_swim_move(X-Y-NewX-NewY, Elem);
-		valid_jump_move(Board, X-Y-NewX-NewY, Elem))
-		),
-		ListOfMoves).
 
-valid_swim_move(X-Y-NewX-NewY, Elem):-
-	Elem \= 1, % Elem is not koi.
-	Elem \= 2, % Elem is not koi.
-	Elem \= 3, % Elem is not stone.
-	(NewX \= X; NewY\= Y), % Not the same pos.
-	DeltaX is X-NewX,
-	DeltaY is Y-NewY,
-	absolute(DeltaX, AbsX),
-	absolute(DeltaY, AbsY),
-	AbsX =< 1,
-	AbsY =< 1.
 
-valid_jump_move(Board, X-Y-NewX-NewY, Elem):-
-	Elem \= 1, % Elem is not koi.
-	Elem \= 2, % Elem is not koi.
-	Elem \= 3, % Elem is not stone.
-	DeltaX is X-NewX,
-	DeltaY is Y-NewY,
-	TotalDelta is DeltaX+DeltaY,
-	is_jump_okay(Board, X-Y-NewX-NewY, TotalDelta-DeltaX-DeltaY).
