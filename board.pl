@@ -171,41 +171,10 @@ update_scores(2, Board, NewX-NewY, Red-Yellow-NewRed-Yellow):-
 	get_adjacent_kois(Board, 1, NewX-NewY, NewScore),
 	NewRed is Red + NewScore.
 
-play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
-	
-	print_game(Board, RedScore, YellowScore),
 
 	
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
-	unique(_Koi, Koi),
-	
-	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
-	own_nth(KoiIndex, Koi, ToMove),
-	!,
-	ToMoveX-ToMoveY = ToMove,
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
-	unique(_NewPos, NewPos),
-	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
-	
-	own_nth(NewPosIndex, NewPos, NewPosVal),
-
-	NewX-NewY = NewPosVal,
-	repeat,
-	
-	write('Choose where to drop a rock'),
-	nl,
-	get_user_input_number(RockX),
-	get_user_input_number(RockY),
-	
-	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
-	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
-	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore),
-	
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
-	
-	
-play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
-	CurrentPlayer is 2,
+play_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
+				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 
 	findall(FromX-FromY-ToX-ToY-PRockX-PRockY,
 	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, FromX-FromY-ToX-ToY-PRockX-PRockY, _),
@@ -223,15 +192,14 @@ play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) 
 	
 	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, 
 	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
-	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore),
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
+	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
 
 	
 
 	
-play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
+play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
+				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 
-	CurrentPlayer is 1,
 	print_game(Board, RedScore, YellowScore),
 	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
 	unique(_Koi, Koi),
@@ -257,19 +225,26 @@ play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) 
 	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
 	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore
-	),
+	).
 	
-	play_human_v_bot(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
+play_loop([CurrentPlay , NextPlay], GameState) :-
+	
+	append(CurrentPlay, [GameState, NewGameState], CurrentPlayWithState),
+	Caller =.. CurrentPlayWithState,
+	Caller,
+	!,
+	play_loop([NextPlay , CurrentPlay], NewGameState).
+	
 
 /* ---------- GAME STATES ---------- */	
 play :- 
 	create_board(_X, 10),
-	play_human_v_human(_X-1-10-10-0-0).
+	play_loop([[play_human], [play_human]], _X-1-10-10-0-0).
 	
 	
 play_v_bot :-
 	create_board(_X, 10),
-	play_human_v_bot(_X-1-10-10-0-0).
+	play_loop([ [play_human], [play_bot] ], (_X-1-10-10-0-0)).
 
 middleBoard([
 					[3, 0, 0, 0, 0, 0, 0],
