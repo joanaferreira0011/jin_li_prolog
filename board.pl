@@ -200,7 +200,6 @@ play_human_get_rock([n-n], n-n).
 play_human_get_rock(ListRocks, RockX-RockY) :-
 	length(ListRocks, N),
 	N > 1,
-	write(ListRocks), nl,
 	repeat,
 	play_human_get_rock_ask(RockX-RockY),
 	member(RockX-RockY, ListRocks).
@@ -228,7 +227,6 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	NewX-NewY = NewPosVal,
 	
 	
-	
 	findall(
 	K-W,
 	move(
@@ -239,15 +237,21 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	_ListRocks
 	),
 	unique(_ListRocks, ListRocks),
-	
+
 	play_human_get_rock(ListRocks, RockX-RockY),
-	
 	move(
 	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
 	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore
 	).
 	
+
+play_loop(_, GameState) :-
+	_-_-_-_-RedScore-YellowScore = GameState,
+	game_over(RedScore-YellowScore, X),
+	print_game(GameState),
+	write('Congrats! '), code(X, L), write(L), write(' you won!'),nl.
+		
 play_loop([CurrentPlay , NextPlay], GameState) :-
 	print_game(GameState),
 	append(CurrentPlay, [GameState, NewGameState], CurrentPlayWithState),
@@ -260,12 +264,17 @@ play_loop([CurrentPlay , NextPlay], GameState) :-
 /* ---------- GAME STATES ---------- */	
 play :- 
 	create_board(_X, 10),
-	play_loop([[play_human], [play_human]], _X-1-0-10-0-0).
+	play_loop([[play_human], [play_human]], _X-1-10-10-10-0).
 	
 	
 play_v_bot :-
 	create_board(_X, 10),
-	play_loop([ [play_human], [play_bot] ], (_X-1-1-10-0-0)).
+	play_loop([ [play_human], [play_bot] ], (_X-1-10-10-0-0)).
+	
+	
+play_bot :-
+	create_board(_X, 10),
+	play_loop([ [play_bot], [play_bot] ], (_X-1-10-10-0-0)).
 
 middleBoard([
 					[3, 0, 0, 0, 0, 0, 0],
@@ -376,11 +385,11 @@ move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
 
 % game_over(+YellowScore-RedScore, -Player).
 % Yellow is the winner.
-game_over(YellowScore-RedScore,  2):-
+game_over(RedScore-YellowScore,  2):-
 	YellowScore >= 10.
 
 % Red is the winner.
-game_over(YellowScore-RedScore, 1):-
+game_over(RedScore-YellowScore, 1):-
 	RedScore >= 10.
 
 get_adjacent_kois(Board, X-Y, NumberKois):-
@@ -439,10 +448,12 @@ can_place_rock(CurrentPlayer, RocksList, OldX-OldY-NewX-NewY)	:-
 
 
 	
-place_rock(_NewBoard-1-0-YellowRocks, _, n-n, _NewBoard-NewRedRocks-NewYellowRocks).
-place_rock(_NewBoard-2-RedRocks-0, _, n-n, _NewBoard-NewRedRocks-NewYellowRocks).
+place_rock(_NewBoard-1-0-YellowRocks, _, n-n, _NewBoard-0-YellowRocks).
+place_rock(_NewBoard-2-RedRocks-0, _, n-n, _NewBoard-RedRocks-0).
 
-
+place_rock(NewBoard-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY, n-n, NewBoard-RedRocks-YellowRocks) :-
+	cant_place_rock(CurrentPlayer-RedRocks-YellowRocks, [n,n], OldX-OldY-NewX-NewY).
+	
 place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY, RockX-RockY, NewBoard-NewRedRocks-NewYellowRocks) :-
 
 	element_at_pos(_NewBoard, RockX-RockY, 0),
@@ -450,8 +461,7 @@ place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY, Ro
 	can_place_rock(CurrentPlayer, [RockX,RockY], OldX-OldY-NewX-NewY),
 	decrease_rocks(CurrentPlayer, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks).
 	
-place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY, n-n, _NewBoard-RedRocks-YellowRocks) :-
-	cant_place_rock(CurrentPlayer, [n,n], OldX-OldY-NewX-NewY).
+
 		
 move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 	move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, _NewBoard),
