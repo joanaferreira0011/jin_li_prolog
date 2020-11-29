@@ -163,13 +163,13 @@ unique(List, Unique) :-
 nextTurn(1,2).
 nextTurn(2,1).
 
-update_scores(1, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
-	get_adjacent_kois(Board, 2, NewX-NewY, NewScore),
-	NewYellow is Yellow + NewScore.
 
-update_scores(2, Board, NewX-NewY, Red-Yellow-NewRed-Yellow):-
-	get_adjacent_kois(Board, 1, NewX-NewY, NewScore),
+update_scores(1, Board, NewX-NewY, Red-Yellow-NewRed-Yellow):-
+	get_adjacent_kois(Board, NewX-NewY, NewScore),
 	NewRed is Red + NewScore.
+update_scores(2, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
+	get_adjacent_kois(Board, NewX-NewY, NewScore),
+	NewYellow is Yellow + NewScore.
 
 
 	
@@ -184,10 +184,6 @@ play_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	length(Koi, LengthList),
 	
 	random(0, LengthList, Rand),
-	write(Rand),
-	nl,
-	write(LengthList),
-	nl,
 	own_nth(Rand, Koi, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY),
 	
 	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, 
@@ -200,7 +196,7 @@ play_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 
-	print_game(Board, RedScore, YellowScore),
+	
 	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
 	unique(_Koi, Koi),
 	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
@@ -228,7 +224,7 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	).
 	
 play_loop([CurrentPlay , NextPlay], GameState) :-
-	
+	print_game(GameState),
 	append(CurrentPlay, [GameState, NewGameState], CurrentPlayWithState),
 	Caller =.. CurrentPlayWithState,
 	Caller,
@@ -244,7 +240,7 @@ play :-
 	
 play_v_bot :-
 	create_board(_X, 10),
-	play_loop([ [play_human], [play_bot] ], (_X-1-10-10-0-0)).
+	play_loop([ [play_human], [play_bot] ], (_X-1-0-10-0-0)).
 
 middleBoard([
 					[3, 0, 0, 0, 0, 0, 0],
@@ -256,37 +252,27 @@ middleBoard([
 					[0, 0, 0, 0, 0, 0, 3]
 				]).
 				
-middle :-
-	middleBoard(_X),
-	print_game(_X, 3 ,4).
-
-	
-endBoard([
-					[3, 0, 0, 3, 0, 0, 0],
-					[0, 0, 0, 0, 0, 3, 0],
-					[0, 3, 3, 0, 0, 0, 3],
-					[3, 1, 3, 0, 3, 0, 0],
-					[0, 0, 0, 3, 3, 0, 0],
-					[0, 0, 0, 1, 2, 0, 3],
-					[3, 0, 0, 2, 3, 0, 3]
-				]).
-				
-end :-
-	endBoard(_X),
-	print_game(_X, 10, 8).
 	
 	
 /* ---------- BOARD RENDERING ---------- */
-print_game([L|T], YellowScore, RedScore):-
+
+print_game(GameState) :-
+	Board-_-RedRocks-YellowRocks-RedScore-YellowScore = GameState,
+	print_game(Board, RedScore-YellowScore, RedRocks-YellowRocks).
+	
+print_game([L|T], RedScore-YellowScore, RedRocks-YellowRocks):-
     write('***** JIN LI *****'),
     nl,
     print_board([L|T]),
     nl,
-	print_score('Yellow', YellowScore),
-	print_score('Red', RedScore).
+	print_score('R', RedScore-RedRocks),
+	print_score('Y', YellowScore-YellowRocks).
 
-print_score(Player, Score):-
-    write(Player), write('\'s score: '), write(Score), nl.
+print_score(Player, Score-Rocks):-
+    write(Player),
+	write(' Score: '), write(Score), write('\t'),
+	write(' Rocks: '), write(Rocks),
+	nl.
 
 print_board([]).
 print_board([L|T]):-
@@ -372,17 +358,20 @@ game_over(YellowScore-RedScore,  2):-
 game_over(YellowScore-RedScore, 1):-
 	RedScore >= 10.
 
-get_adjacent_kois(Board, FindingKoi, X-Y, NumberKois):-
+get_adjacent_kois(Board, X-Y, NumberKois):-
 	findall(
 	KoiX-KoiY,
 	(
+	member(FindingKoi, [1,2]),
 	element_at_pos(Board, KoiX-KoiY, FindingKoi),
 	DeltaX is X-KoiX,
 	DeltaY is Y-KoiY,
 	absolute(DeltaX, AbsX),
 	absolute(DeltaY, AbsY),
 	AbsX =< 1,
-	AbsY =< 1
+	AbsY =< 1,
+	Total is AbsX + AbsY,
+	Total > 0
 	),
 	Kois),
 	length(Kois, NumberKois).
