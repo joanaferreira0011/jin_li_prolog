@@ -1,6 +1,7 @@
 :-use_module(library(lists)).
 :-use_module(library(random)).
 
+
 /* ---------- BOARD PIECES ---------- */
 
 /* Empty space. */
@@ -21,7 +22,7 @@ code(3, '*').
 /* ---------- BOARD CREATION ---------- */
 
 /* Creates list with length N and all elements El */
-fill([], El, 0).
+fill([], _, 0).
 fill([El | T], El, N) :- 
 	N > 0,
 	Nn is N-1,
@@ -72,7 +73,7 @@ match_char(Cur, Acc, X, ListRead) :-
 	append(ListRead, [Int], NewList),
 	get_user_input_number_int(NewVal, X, NewList).
 	
-match_char(Cur, _, _, _) :-
+match_char(_, _, _, _) :-
 	fail.
 
 get_user_input_number_int(Acc, X, ListRead) :-
@@ -163,23 +164,26 @@ nextTurn(1,2).
 nextTurn(2,1).
 
 update_scores(1, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
-	get_adjacent_kois(Board, NewY-NewX, NewScore),
+	get_adjacent_kois(Board, 2, NewX-NewY, NewScore),
 	NewYellow is Yellow + NewScore.
 
 update_scores(2, Board, NewX-NewY, Red-Yellow-NewRed-Yellow):-
-	get_adjacent_kois(Board, NewY-NewX, NewScore),
+	get_adjacent_kois(Board, 1, NewX-NewY, NewScore),
 	NewRed is Red + NewScore.
 
-play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
+play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
 	
-	print_game(Board, Red, Yellow),
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks, X-Y-_-_-_-_, _), _Koi),
+	print_game(Board, RedScore, YellowScore),
+
+	
+	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
 	unique(_Koi, Koi),
+	
 	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
 	own_nth(KoiIndex, Koi, ToMove),
 	!,
 	ToMoveX-ToMoveY = ToMove,
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
+	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
 	unique(_NewPos, NewPos),
 	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
 	
@@ -193,40 +197,49 @@ play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	get_user_input_number(RockX),
 	get_user_input_number(RockY),
 	
-	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
+	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
+	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
+	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore),
+	
+	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
 	
 	
-play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
+play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
 	CurrentPlayer is 2,
 
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks, FromX-FromY-ToX-ToY-RockX-Rock, _), _Koi),
+	findall(FromX-FromY-ToX-ToY-PRockX-PRockY,
+	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, FromX-FromY-ToX-ToY-PRockX-PRockY, _),
+	_Koi),
 	unique(_Koi, Koi),
 	
 	length(Koi, LengthList),
 	
 	random(0, LengthList, Rand),
+	write(Rand),
+	nl,
+	write(LengthList),
+	nl,
 	own_nth(Rand, Koi, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY),
 	
-	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
+	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, 
+	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
+	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore),
+	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
 
 	
 
 	
-play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
+play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore) :-
 
 	CurrentPlayer is 1,
-	print_game(Board, Red, Yellow),
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks, X-Y-_-_-_-_, _), _Koi),
+	print_game(Board, RedScore, YellowScore),
+	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
 	unique(_Koi, Koi),
 	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
 	own_nth(KoiIndex, Koi, ToMove),
 	!,
 	ToMoveX-ToMoveY = ToMove,
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
+	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, F), _NewPos),
 	unique(_NewPos, NewPos),
 	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
 	
@@ -240,19 +253,23 @@ play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	get_user_input_number(RockX),
 	get_user_input_number(RockY),
 	
-	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
-	play_human_v_bot(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
+	move(
+	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
+	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
+	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore
+	),
+	
+	play_human_v_bot(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
 
 /* ---------- GAME STATES ---------- */	
 play :- 
 	create_board(_X, 10),
-	play_human_v_human(_X-1-1-1, 0-0).
+	play_human_v_human(_X-1-10-10-0-0).
 	
 	
 play_v_bot :-
 	create_board(_X, 10),
-	play_human_v_bot(_X-1-10-10, 0-0).
+	play_human_v_bot(_X-1-10-10-0-0).
 
 middleBoard([
 					[3, 0, 0, 0, 0, 0, 0],
@@ -349,7 +366,6 @@ replace_matrix_element([CurrentRow| NextRows], X-Y, NewElem, [CurrentRow | Tail]
 	replace_matrix_element(NextRows, DecX-Y, NewElem, Tail).
 
 replace_matrix_element([CurrentRow | NextRows], 0-Y, NewElem, [NewRow | NextRows]) :-
-	length(CurrentRow, RowLength),
 	append(Left, [_ | Right], CurrentRow),
 	length(Left, Y),
 	append(Left, [NewElem | Right], NewRow).
@@ -380,32 +396,20 @@ game_over(YellowScore-RedScore, Winner):-
 	RedScore >= 10,
 	Winner is 'Red'.
 
-get_adjacent_kois(Board, Y-X, NumberKois):-
-	UpperRow is X-1,
-	LowerRow is X+1,
-	RightCol is Y+1,
-	LeftCol is Y-1,
-	get_koi_pos(Board, Y-UpperRow, IsKoiUp),
-	get_koi_pos(Board, Y-LowerRow, IsKoiDown),
-	get_koi_pos(Board, RightCol-X, IsKoiRight),
-	get_koi_pos(Board, LeftCol-X, IsKoiLeft),
-	NumberKois is IsKoiUp + IsKoiDown + IsKoiRight + IsKoiLeft,
-	nl, write('nkois '), write(NumberKois), nl.
-% Koi.
-get_koi_pos(Board, Y-X, 1):-
-	nth0(X, Board, Row),
-	nth0(Y, Row, Elem),
-	(Elem == 1; Elem == 2).
-
-% Not a koi.
-get_koi_pos(Board, Y-X, 0):-
-	nth0(X, Board, Row),
-	nth0(Y, Row, Elem),
-	Elem \== 1,
-	Elem \== 2.
-
-% Pos is outside the Board boundaries
-get_koi_pos(Board, Y-X, 0).
+get_adjacent_kois(Board, FindingKoi, X-Y, NumberKois):-
+	findall(
+	KoiX-KoiY,
+	(
+	element_at_pos(Board, KoiX-KoiY, FindingKoi),
+	DeltaX is X-KoiX,
+	DeltaY is Y-KoiY,
+	absolute(DeltaX, AbsX),
+	absolute(DeltaY, AbsY),
+	AbsX =< 1,
+	AbsY =< 1
+	),
+	Kois),
+	length(Kois, NumberKois).
 
 	
 decrease_rocks(1, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks):-
@@ -426,9 +430,10 @@ place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks, RockX-RockY, NewBoard-N
 	decrease_rocks(CurrentPlayer, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks).
 	
 
-move(Board-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks) :-
+move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 	move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, _NewBoard),
 	nextTurn(CurrentPlayer, NewCurrentPlayer),
-	place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks,  RockX-RockY, NewBoard-NewRedRocks-NewYellowRocks).
+	place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks,  RockX-RockY, NewBoard-NewRedRocks-NewYellowRocks),
+	update_scores(CurrentPlayer, NewBoard, NewX-NewY, RedScore-YellowScore-NewRedScore-NewYellowScore).
 	
 	
