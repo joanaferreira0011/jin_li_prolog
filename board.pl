@@ -1,5 +1,5 @@
-use_module(library(lists)).
-use_module(library(random)).
+:-use_module(library(lists)).
+:-use_module(library(random)).
 
 /* ---------- BOARD PIECES ---------- */
 
@@ -162,6 +162,14 @@ unique(List, Unique) :-
 nextTurn(1,2).
 nextTurn(2,1).
 
+update_scores(1, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
+	get_adjacent_kois(Board, NewY-NewX, NewScore),
+	NewYellow is Yellow + NewScore.
+
+update_scores(2, Board, NewX-NewY, Red-Yellow-NewRed-Yellow):-
+	get_adjacent_kois(Board, NewY-NewX, NewScore),
+	NewRed is Red + NewScore.
+
 play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	
 	print_game(Board, Red, Yellow),
@@ -186,7 +194,8 @@ play_human_v_human(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	get_user_input_number(RockY),
 	
 	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, Red-Yellow).
+	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
+	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
 	
 	
 play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
@@ -201,7 +210,8 @@ play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	own_nth(Rand, Koi, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY),
 	
 	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, Red-Yellow).
+	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
+	play_human_v_human(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
 
 	
 
@@ -231,12 +241,13 @@ play_human_v_bot(Board-CurrentPlayer-RedRocks-YellowRocks, Red-Yellow) :-
 	get_user_input_number(RockY),
 	
 	move(Board-CurrentPlayer-RedRocks-YellowRocks, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks),
-	play_human_v_bot(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, Red-Yellow).
-	
+	update_scores(CurrentPlayer, NewBoard, NewX-NewY, Red-Yellow-NewRed-NewYellow),
+	play_human_v_bot(NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks, NewRed-NewYellow).
+
 /* ---------- GAME STATES ---------- */	
 play :- 
 	create_board(_X, 10),
-	play_human_v_human(_X-1-10-10, 0-0).
+	play_human_v_human(_X-1-1-1, 0-0).
 	
 	
 play_v_bot :-
@@ -279,7 +290,7 @@ print_game([L|T], YellowScore, RedScore):-
     nl,
     print_board([L|T]),
     nl,
-	print_score('Yell', YellowScore),
+	print_score('Yellow', YellowScore),
 	print_score('Red', RedScore).
 
 print_score(Player, Score):-
@@ -378,39 +389,23 @@ get_adjacent_kois(Board, Y-X, NumberKois):-
 	get_koi_pos(Board, Y-LowerRow, IsKoiDown),
 	get_koi_pos(Board, RightCol-X, IsKoiRight),
 	get_koi_pos(Board, LeftCol-X, IsKoiLeft),
-	NumberKois is (IsKoiUp + IsKoiDown + IsKoiRight + IsKoiLeft),
-	write(NumberKois).
-
+	NumberKois is IsKoiUp + IsKoiDown + IsKoiRight + IsKoiLeft,
+	nl, write('nkois '), write(NumberKois), nl.
 % Koi.
-get_koi_pos(Board, Y-X, IsKoi):-
-	X>=0,
-	Y>=0,
-	X<7,
-	Y<7,
+get_koi_pos(Board, Y-X, 1):-
 	nth0(X, Board, Row),
 	nth0(Y, Row, Elem),
-	(Elem == 1; Elem == 2), !,
-	IsKoi is 1.
+	(Elem == 1; Elem == 2).
 
 % Not a koi.
-get_koi_pos(Board, Y-X, IsKoi):-
-	X>=0, 
-	Y>=0,
-	X<7,
-	Y<7,
+get_koi_pos(Board, Y-X, 0):-
 	nth0(X, Board, Row),
 	nth0(Y, Row, Elem),
 	Elem \== 1,
-	Elem \== 2, !,
-	IsKoi is 0.
+	Elem \== 2.
 
 % Pos is outside the Board boundaries
-get_koi_pos(Board, Y-X, IsKoi):-
-	(X<0; 
-	Y<0;
-	X>=7;
-	Y>=7), !,
-	IsKoi is 0.
+get_koi_pos(Board, Y-X, 0).
 
 	
 decrease_rocks(1, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks):-
