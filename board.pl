@@ -388,13 +388,14 @@ move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, NewBoard) :-
 
 /* GAME SCORE LOGIC */
 
-game_over(YellowScore-RedScore, Winner):-
-	YellowScore >= 10,
-	Winner is 'Yellow'.
+% game_over(+YellowScore-RedScore, -Player).
+% Yellow is the winner.
+game_over(YellowScore-RedScore,  2):-
+	YellowScore >= 10.
 
-game_over(YellowScore-RedScore, Winner):-
-	RedScore >= 10,
-	Winner is 'Red'.
+% Red is the winner.
+game_over(YellowScore-RedScore, 1):-
+	RedScore >= 10.
 
 get_adjacent_kois(Board, FindingKoi, X-Y, NumberKois):-
 	findall(
