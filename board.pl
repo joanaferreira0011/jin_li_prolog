@@ -56,9 +56,16 @@ print_game(GameState) :-
 	print_game(Board, RedScore-YellowScore, RedRocks-YellowRocks).
 	
 print_game([L|T], RedScore-YellowScore, RedRocks-YellowRocks):-
-    write('***** JIN LI *****'),
+
+	
+	Full = [L | T],
+	length(Full, Length),
+	print_same_char_nonl(Length, '*'),
+    write(' JIN LI '),
+	print_same_char_nonl(Length, '*'),
     nl,
-    print_board([L|T]),
+	print_board([L|T]),
+	print_same_char(4*Length, '-'),
     nl,
 	print_score('R', RedScore-RedRocks),
 	print_score('Y', YellowScore-YellowRocks).
@@ -69,9 +76,14 @@ print_score(Player, Score-Rocks):-
 	write(' Rocks: '), write(Rocks),
 	nl.
 
-print_board([]).
-print_board([L|T]):-
-    write('| '), print_line(L), nl, print_board(T).
+print_board(B) :-
+	length(B, Length),
+	print_board(B, 4*Length).
+	
+print_board([], _).
+print_board([L|T], Length):-
+	print_same_char(Length, '-'),
+    write('| '), print_line(L), nl, print_board(T, Length).
 
 print_line([]).
 print_line([C | L]):-
@@ -81,8 +93,17 @@ print_line([C | L]):-
 print_cell(C):-
     code(C,P),
     write(P), write(' | ').
+
+%prints same char multiple times	
+print_same_char(N, Char) :-
+	print_same_char_nonl(N, Char),
+	nl.
 	
-	
+print_same_char_nonl(0, _).
+print_same_char_nonl(N, Char) :-
+	NewN is N-1,
+	write(Char),
+	print_same_char_nonl(NewN, Char).
 	
 /* ==== BOARD ELEMENT RETRIEVAL ===== */
 element_at_pos(Board, X-Y, Elem) :-
