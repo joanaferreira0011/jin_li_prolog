@@ -172,11 +172,8 @@ update_scores(2, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
 	NewYellow is Yellow + NewScore.
 
 
-	
-choose_move_random(GameState,
-				NewGameState) :-
-
-				
+%Does a random move	
+choose_move(0, GameState, Move):-
 	valid_moves(GameState, ListOfMoves),
 	
 	length(ListOfMoves, LengthList),
@@ -186,14 +183,15 @@ choose_move_random(GameState,
 	
 	move(GameState, 
 	Move,
-	NewGameState).
-
-choose_move(0, GameState, NewGameState):-
-	choose_move_random(GameState, NewGameState).
+	_).
+choose_move(Level, GameState, Move) :-
+	Level > 0,
+	minimax(Level, GameState, Move).
 	
-choose_move(Level, GameState, NewGameState) :-
-	write('Not implemented'), nl,
-	fail.
+minimax(0, GameState, GameState).
+
+
+
 	
 play_human_get_rock_ask(RockX-RockY) :-
 	write('Choose where to drop a rock'), nl,
@@ -212,18 +210,19 @@ play_human_get_rock(ListRocks, RockX-RockY, Board-CurrentPlayer-OldX-OldY-NewX-N
 	play_human_get_rock_ask(RockX-RockY),	
 	member(RockX-RockY, ListRocks).
 	
-
 valid_moves(GameState, ListOfMoves) :-
-	findall(FromX-FromY-ToX-ToY-RockX-RockY, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, _), _ValidMoves),
-	unique(_ValidMoves, ListOfMoves).
+	valid_states(GameState, ListOfStates),
+	findall(FromX-FromY-ToX-ToY-RockX-RockY, member(FromX-FromY-ToX-ToY-RockX-RockY-_, ListOfStates), _ListOfMoves),
+	unique(_ListOfMoves, ListOfMoves).
+	
+valid_states(GameState, ListOfStates) :-
+	findall(FromX-FromY-ToX-ToY-RockX-RockY-NewState, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, NewState), _ValidStates),
+	unique(_ValidStates, ListOfStates).
 
 	
 play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
-				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
+				ToMoveX-ToMoveY-NewX-NewY-RockX-RockY) :-
 
-	
-	
-	
 	valid_moves(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ListOfMoves),
 	
 	
@@ -249,10 +248,11 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	unique(_ListRocks, ListRocks),
 	
 	play_human_get_rock(ListRocks, RockX-RockY, Board-CurrentPlayer-ToMoveX-ToMoveY-NewX-NewY),
+	
 	move(
 	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
-	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore
+	_
 	).
 	
 
@@ -264,10 +264,11 @@ play_loop(_, GameState) :-
 		
 play_loop([CurrentPlay , NextPlay], GameState) :-
 	print_game(GameState),
-	append(CurrentPlay, [GameState, NewGameState], CurrentPlayWithState),
+	append(CurrentPlay, [GameState, GameMove], CurrentPlayWithState),
 	Caller =.. CurrentPlayWithState,
 	Caller,
 	!,
+	move(GameState, GameMove, NewGameState),
 	play_loop([NextPlay , CurrentPlay], NewGameState).
 	
 
@@ -284,7 +285,7 @@ play_v_bot :-
 	
 play_bot :-
 	create_board(_X, 10),
-	play_loop([ [choose_move,0], [choose_move,3] ], (_X-1-10-10-0-0)).
+	play_loop([ [choose_move,0], [choose_move,0] ], (_X-1-10-10-0-0)).
 
 				
 	
