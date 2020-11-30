@@ -44,13 +44,13 @@ update_scores(2, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
 /* ========== TURN LOGIN ========= */
 
 %Turn Conversion table
-nextTurn(1,2).
-nextTurn(2,1).
+next_turn(1,2).
+next_turn(2,1).
 
 		
 move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 	move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, _NewBoard),
-	nextTurn(CurrentPlayer, NewCurrentPlayer),
+	next_turn(CurrentPlayer, NewCurrentPlayer),
 	place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks,  OldX-OldY-NewX-NewY, RockX-RockY, NewBoard-NewRedRocks-NewYellowRocks),
 	update_scores(CurrentPlayer, NewBoard, NewX-NewY, RedScore-YellowScore-NewRedScore-NewYellowScore).
 	

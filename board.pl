@@ -65,8 +65,6 @@ print_game([L|T], RedScore-YellowScore, RedRocks-YellowRocks):-
 	print_same_char_nonl(Length, '*'),
     nl,
 	print_board([L|T]),
-	print_same_char(4*Length, '-'),
-    nl,
 	print_score('R', RedScore-RedRocks),
 	print_score('Y', YellowScore-YellowRocks).
 
@@ -80,7 +78,8 @@ print_board(B) :-
 	length(B, Length),
 	print_board(B, 4*Length).
 	
-print_board([], _).
+print_board([], Length) :-
+		print_same_char(Length, '-'),nl.
 print_board([L|T], Length):-
 	print_same_char(Length, '-'),
     write('| '), print_line(L), nl, print_board(T, Length).
@@ -121,3 +120,26 @@ replace_matrix_element([CurrentRow | NextRows], 0-Y, NewElem, [NewRow | NextRows
 	append(Left, [_ | Right], CurrentRow),
 	length(Left, Y),
 	append(Left, [NewElem | Right], NewRow).
+	
+	
+	
+	
+middle_board([
+	[3, 0, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 0],
+	[0, 0, 3, 0, 0, 0, 3],
+	[0, 0, 0, 2, 1, 0, 0],
+	[0, 0, 0, 3, 0, 2, 0],
+	[0, 1, 0, 0, 0, 0, 0],
+	[0, 0, 0, 0, 0, 0, 3]
+]).
+
+end_board([
+	[3, 0, 0, 3, 0, 0, 0],
+	[0, 0, 0, 0, 0, 3, 0],
+	[0, 3, 3, 0, 0, 0, 3],
+	[3, 1, 3, 0, 3, 0, 0],
+	[0, 0, 0, 3, 3, 0, 0],
+	[0, 0, 0, 1, 2, 0, 3],
+	[3, 0, 0, 2, 3, 0, 3]
+]).
