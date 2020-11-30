@@ -194,31 +194,44 @@ play_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 play_human_get_rock_ask(RockX-RockY) :-
 	write('Choose where to drop a rock'), nl,
 	get_user_input_number(RockX),
-	get_user_input_number(RockY).
+	!,
+	get_user_input_number(RockY),
+	!.
 
-play_human_get_rock([n-n], n-n).
-play_human_get_rock(ListRocks, RockX-RockY) :-
+play_human_get_rock([n-n], n-n, _).
+play_human_get_rock(ListRocks, RockX-RockY, Board-CurrentPlayer-OldX-OldY-NewX-NewY) :-
 	length(ListRocks, N),
 	N > 1,
+	move_koi(Board-CurrentPlayer, OldX-OldY-NewX-NewY, _InterBoard),
+	print_board(_InterBoard),
 	repeat,
-	play_human_get_rock_ask(RockX-RockY),
+	play_human_get_rock_ask(RockX-RockY),	
 	member(RockX-RockY, ListRocks).
 	
-	
+
+valid_moves(GameState, ListOfMoves) :-
+	findall(FromX-FromY-ToX-ToY-RockX-RockY, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, _), _ValidMoves),
+	unique(_ValidMoves, ListOfMoves).
 
 	
 play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
 
 	
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, X-Y-_-_-_-_, _), _Koi),
+	
+	
+	valid_moves(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ListOfMoves),
+	
+	
+	findall(X-Y, member(X-Y-_-_-_-_, ListOfMoves), _Koi),
 	unique(_Koi, Koi),
 	
 	choose_list_elem(Koi, 'Choose a Koi to move', KoiIndex),
 	own_nth(KoiIndex, Koi, ToMove),
 	!,
 	ToMoveX-ToMoveY = ToMove,
-	findall(X-Y, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, ToMoveX-ToMoveY-X-Y-_-_, _), _NewPos),
+	
+	findall(X-Y, member(ToMoveX-ToMoveY-X-Y-_-_, ListOfMoves), _NewPos),
 	unique(_NewPos, NewPos),
 	choose_list_elem(NewPos, 'Choose a new position', NewPosIndex),
 	
@@ -227,18 +240,11 @@ play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	NewX-NewY = NewPosVal,
 	
 	
-	findall(
-	K-W,
-	move(
-	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
-	ToMoveX-ToMoveY-NewX-NewY-K-W,
-	_
-	),
-	_ListRocks
-	),
+	
+	findall(X-Y, member(ToMoveX-ToMoveY-NewX-NewY-X-Y, ListOfMoves), _ListRocks),
 	unique(_ListRocks, ListRocks),
-
-	play_human_get_rock(ListRocks, RockX-RockY),
+	
+	play_human_get_rock(ListRocks, RockX-RockY, Board-CurrentPlayer-ToMoveX-ToMoveY-NewX-NewY),
 	move(
 	Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
@@ -458,7 +464,7 @@ place_rock(_NewBoard-CurrentPlayer-RedRocks-YellowRocks, OldX-OldY-NewX-NewY, Ro
 
 	element_at_pos(_NewBoard, RockX-RockY, 0),
 	replace_matrix_element(_NewBoard, RockX-RockY, 3, NewBoard),
-	can_place_rock(CurrentPlayer, [RockX,RockY], OldX-OldY-NewX-NewY),
+	can_place_rock(CurrentPlayer, [RedRocks,YellowRocks], OldX-OldY-NewX-NewY),
 	decrease_rocks(CurrentPlayer, RedRocks-YellowRocks, NewRedRocks-NewYellowRocks).
 	
 
