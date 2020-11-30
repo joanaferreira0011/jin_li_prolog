@@ -173,24 +173,28 @@ update_scores(2, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
 
 
 	
-play_bot(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
-				NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
+choose_move_random(GameState,
+				NewGameState) :-
 
-	findall(FromX-FromY-ToX-ToY-PRockX-PRockY,
-	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, FromX-FromY-ToX-ToY-PRockX-PRockY, _),
-	_Koi),
-	unique(_Koi, Koi),
+				
+	valid_moves(GameState, ListOfMoves),
 	
-	length(Koi, LengthList),
+	length(ListOfMoves, LengthList),
 	
 	random(0, LengthList, Rand),
-	own_nth(Rand, Koi, ToMoveX-ToMoveY-NewX-NewY-RockX-RockY),
+	own_nth(Rand, ListOfMoves, Move),
 	
-	move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, 
-	ToMoveX-ToMoveY-NewX-NewY-RockX-RockY,
-	NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore).
+	move(GameState, 
+	Move,
+	NewGameState).
 
-
+choose_move(0, GameState, NewGameState):-
+	choose_move_random(GameState, NewGameState).
+	
+choose_move(Level, GameState, NewGameState) :-
+	write('Not implemented'), nl,
+	fail.
+	
 play_human_get_rock_ask(RockX-RockY) :-
 	write('Choose where to drop a rock'), nl,
 	get_user_input_number(RockX),
@@ -275,22 +279,13 @@ play :-
 	
 play_v_bot :-
 	create_board(_X, 10),
-	play_loop([ [play_human], [play_bot] ], (_X-1-10-10-0-0)).
+	play_loop([ [play_human], [choose_move, 0] ], (_X-1-10-10-0-0)).
 	
 	
 play_bot :-
 	create_board(_X, 10),
-	play_loop([ [play_bot], [play_bot] ], (_X-1-10-10-0-0)).
+	play_loop([ [choose_move,0], [choose_move,3] ], (_X-1-10-10-0-0)).
 
-middleBoard([
-					[3, 0, 0, 0, 0, 0, 0],
-					[0, 0, 0, 0, 0, 0, 0],
-					[0, 0, 3, 0, 0, 0, 3],
-					[0, 0, 0, 2, 1, 0, 0],
-					[0, 0, 0, 3, 0, 2, 0],
-					[0, 1, 0, 0, 0, 0, 0],
-					[0, 0, 0, 0, 0, 0, 3]
-				]).
 				
 	
 	
@@ -477,18 +472,17 @@ move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-Ne
 	
 
 % VALUE FUNCTIONS - value(+YellowScore-RedScore, +Player, -Value)
-value(YellowScore-RedScore, 2, Value):-
+value(GameState, Value) :-
+	_-CurrentPlayer-_-_-RedScore-YellowScore = GameState,
+	value(RedScore-YellowScore, CurrentPlayer, Value).
+	
+	
+value(RedScore-YellowScore, 2, Value):-
 	MaxScore is max(YellowScore, RedScore),
 	Value is (YellowScore-RedScore) * MaxScore.
 
-value(YellowScore-RedScore, 1, Value):-
+value(RedScore-YellowScore, 1, Value):-
 	MaxScore is max(YellowScore, RedScore),
 	Value is (RedScore-YellowScore) * MaxScore.
-
-% Returns in ListOfMoves a list of [KoiX-KoiY-NewX-NewY], where KoiX and KoiY are coordinates of a Koi.
-valid_moves(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, CurrentPlayer, ListOfMoves):-
-	findall(KoiX-KoiY-NewX-NewY, move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, KoiX-KoiY-NewX-NewY-_-_, _), _Moves),
-	unique(_Moves, ListOfMoves).
-
 
 
