@@ -186,12 +186,63 @@ choose_move(0, GameState, Move):-
 	_).
 choose_move(Level, GameState, Move) :-
 	Level > 0,
-	minimax(Level, GameState, Move).
+	minimax(Level, GameState, Move),
+	write('Choose_move got '), write(Move), nl.
+
 	
-minimax(0, GameState, GameState).
+minimax_choose_best(Level, BestMoves, BestMove) :-
+	Type is Level mod 2,
+	minimax_choose_best(Level, Type, BestMoves, BestMove).
+	
+minimax_choose_best(_, 1, BestMoves, BestMove) :-
+	min_member(BestMove, BestMoves).
+	
+minimax_choose_best(_, 0, BestMoves, BestMove) :-
+	max_member(BestMove, BestMoves).
+	
+minimax(Level, Level, Move, GameState, Value-Move):-
+	value(GameState, Value),
+	write('CONAA'), nl.
+
+minimax(Level, MaxLevel, CurrentMove, GameState, BestMove) :-
+	write('Hmmmm '), write(Level-MaxLevel),nl,
+	Level > 0,
+	valid_states(GameState, _ListOfStates),
+	length(ListOfStates, 2),
+	append(ListOfStates, _, _ListOfStates),
+	
+	NewLevel is Level+1,
+	Caller =.. [minimax, NewLevel, MaxLevel, CurrentMove],
+	maplist(Caller, ListOfStates, BestMoves),
+	write('PILAAA '), write(Level), nl,
+	!,
+	minimax_choose_best(Level, BestMoves, BestMove),
+	write('tudo bem '), write(BestMove), nl.
 
 
 
+minimax(Level, GameState, Move) :-
+	Level > 0,
+	valid_all(GameState, _ListOfAll),
+	length(ListOfAll, 2),
+	append(ListOfAll, _, _ListOfAll),
+	maplist(get_move_from_all, ListOfAll, ListOfMoves),
+	maplist(get_state_from_all, ListOfAll, ListOfStates),
+	generate_first_best_moves(Level, ListOfMoves, ListOfStates, BestMoves),
+	write('Chegue aqui '), write(BestMoves), nl,
+	minimax_choose_best(_, 0, BestMoves, _Move),
+	_-(A-B-C-D-E-F) = _Move,
+	Move = A-B-C-D-E-F,
+	write('e aqui???' ), write(Move), nl.
+	
+generate_first_best_moves(_, [], [], []).
+generate_first_best_moves(MaxLevel, [CurrentMove | TailMoves], [CurrentState | TailStates], [CurrentBest | TailBests]) :-
+	minimax(1, MaxLevel, CurrentMove, CurrentState, CurrentBest),
+	generate_first_best_moves(MaxLevel, TailMoves, TailStates, TailBests).
+		
+
+get_move_from_all(FromX-FromY-ToX-ToY-RockX-RockY-_, FromX-FromY-ToX-ToY-RockX-RockY).
+get_state_from_all(_-_-_-_-_-_-State, State).
 	
 play_human_get_rock_ask(RockX-RockY) :-
 	write('Choose where to drop a rock'), nl,
@@ -211,14 +262,17 @@ play_human_get_rock(ListRocks, RockX-RockY, Board-CurrentPlayer-OldX-OldY-NewX-N
 	member(RockX-RockY, ListRocks).
 	
 valid_moves(GameState, ListOfMoves) :-
-	valid_states(GameState, ListOfStates),
-	findall(FromX-FromY-ToX-ToY-RockX-RockY, member(FromX-FromY-ToX-ToY-RockX-RockY-_, ListOfStates), _ListOfMoves),
+	findall(FromX-FromY-ToX-ToY-RockX-RockY, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, _), _ListOfMoves),
 	unique(_ListOfMoves, ListOfMoves).
 	
 valid_states(GameState, ListOfStates) :-
-	findall(FromX-FromY-ToX-ToY-RockX-RockY-NewState, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, NewState), _ValidStates),
+	findall(NewState, move(GameState, _, NewState), _ValidStates),
 	unique(_ValidStates, ListOfStates).
-
+	
+valid_all(GameState, ListOfAll) :-
+	findall(FromX-FromY-ToX-ToY-RockX-RockY-NewState, move(GameState, FromX-FromY-ToX-ToY-RockX-RockY, NewState), _ListOfAll),
+	unique(_ListOfAll, ListOfAll).
+	
 	
 play_human(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore,
 				ToMoveX-ToMoveY-NewX-NewY-RockX-RockY) :-
@@ -267,8 +321,10 @@ play_loop([CurrentPlay , NextPlay], GameState) :-
 	append(CurrentPlay, [GameState, GameMove], CurrentPlayWithState),
 	Caller =.. CurrentPlayWithState,
 	Caller,
+	write('Estou no loop '), write(GameMove), nl,
 	!,
 	move(GameState, GameMove, NewGameState),
+	write('Whaaaat'), nl,
 	play_loop([NextPlay , CurrentPlay], NewGameState).
 	
 
@@ -285,7 +341,7 @@ play_v_bot :-
 	
 play_bot :-
 	create_board(_X, 10),
-	play_loop([ [choose_move,0], [choose_move,0] ], (_X-1-10-10-0-0)).
+	play_loop([ [choose_move,2], [choose_move,2] ], (_X-1-10-10-0-0)).
 
 				
 	
