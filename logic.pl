@@ -14,6 +14,7 @@ game_over(RedScore-_, 1):-
 	
 /* ====== SCORING LOGIC ===== */
 
+% Length of the list of Kois with a low enough Delta are adjancent
 get_adjacent_kois(Board, X-Y, NumberKois):-
 	findall(
 	KoiX-KoiY,
@@ -42,9 +43,9 @@ update_scores(2, Board, NewX-NewY, Red-Yellow-Red-NewYellow):-
 	
 /* ========== TURN LOGIN ========= */
 
+%Turn Conversion table
 nextTurn(1,2).
 nextTurn(2,1).
-
 
 		
 move(Board-CurrentPlayer-RedRocks-YellowRocks-RedScore-YellowScore, OldX-OldY-NewX-NewY-RockX-RockY, NewBoard-NewCurrentPlayer-NewRedRocks-NewYellowRocks-NewRedScore-NewYellowScore) :-
@@ -135,6 +136,33 @@ cant_place_rock(_, [n,n], OldX-OldY-NewX-NewY)	:-
 	absolute(DeltaY, AbsY),
 	Total is AbsX + AbsY,
 	\+ can_place_rock_delta_check(Total, AbsX-AbsY).
+	
+
+/* ===== HELPER FUNCTIONS ======== */
+absolute(X, Abs) :-
+	Av is X,
+	Av < 0,
+	Abs is -Av.
+	
+absolute(X, Abs) :-
+	Av is X,
+	Av >= 0,
+	Abs is Av.
+	
+	
+unique([], Unique, Unique).
+unique([X | Rest], Unique, Acc) :-
+	\+ member(X, Acc),
+	append(Acc, [X], NewAcc),
+	unique(Rest, Unique, NewAcc).
+	
+unique([X | Rest], Unique, Acc) :-
+	member(X, Acc),
+	unique(Rest, Unique, Acc).
+
+unique(List, Unique) :-
+	unique(List, Unique, []).
+
 
 
 	

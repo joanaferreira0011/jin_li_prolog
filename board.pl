@@ -47,48 +47,7 @@ create_board(X, L) :-
 	create_player_row(_YellowRow, _BetweenRow, 2),
 	_AlmostFinal = [ _RedRow | _MiddleBoard],
 	append(_AlmostFinal, [_YellowRow], X).
-	
 
-	
-print_list_elems_intern([], _).
-print_list_elems_intern([X | _Tail], Index) :-
-	write(Index),
-	write(' - '),
-	write(X),
-	nl,
-	NewIndex is Index+1,
-	print_list_elems_intern(_Tail, NewIndex).
-	
-print_list_elems(L):-
-	print_list_elems_intern(L, 0).
-	
-	
-
-unique([], Unique, Unique).
-unique([X | Rest], Unique, Acc) :-
-	\+ member(X, Acc),
-	append(Acc, [X], NewAcc),
-	unique(Rest, Unique, NewAcc).
-	
-unique([X | Rest], Unique, Acc) :-
-	member(X, Acc),
-	unique(Rest, Unique, Acc).
-
-unique(List, Unique) :-
-	unique(List, Unique, []).
-
-
-
-
-
-
-	
-
-	
-
-
-
-	
 	
 /* ---------- BOARD RENDERING ---------- */
 
@@ -124,22 +83,14 @@ print_cell(C):-
     write(P), write(' | ').
 	
 	
+	
+/* ==== BOARD ELEMENT RETRIEVAL ===== */
 element_at_pos(Board, X-Y, Elem) :-
 	nth0(X, Board, Row),
 	nth0(Y, Row, Elem).
 
-absolute(X, Abs) :-
-	Av is X,
-	Av < 0,
-	Abs is -Av.
-	
-absolute(X, Abs) :-
-	Av is X,
-	Av >= 0,
-	Abs is Av.
 
-
-	
+/* ====== BOARD ELEMENT REPLACEMENT ======== */
 replace_matrix_element([CurrentRow| NextRows], X-Y, NewElem, [CurrentRow | Tail]) :-
 	X > 0,
 	DecX is X-1,
@@ -149,8 +100,3 @@ replace_matrix_element([CurrentRow | NextRows], 0-Y, NewElem, [NewRow | NextRows
 	append(Left, [_ | Right], CurrentRow),
 	length(Left, Y),
 	append(Left, [NewElem | Right], NewRow).
-	
-
-
-
-
