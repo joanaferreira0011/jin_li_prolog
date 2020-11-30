@@ -189,6 +189,19 @@ choose_move(Level, GameState, Move) :-
 	minimax(Level, GameState, Move),
 	write('Choose_move got '), write(Move), nl.
 
+rank_states(State, Value-State) :-
+	value(State, Value).
+	
+remove_rank_states(_-B, B).
+	
+get_best_states(States, F) :-
+	maplist(rank_states, States, _F),
+	sort(_F, _Ftwo),
+	length(F, 4),
+	append(_, _Ff, _Ftwo),
+	maplist(remove_rank_states, _Ff, F).
+	
+	
 	
 minimax_choose_best(Level, BestMoves, BestMove) :-
 	Type is Level mod 2,
@@ -201,39 +214,34 @@ minimax_choose_best(_, 0, BestMoves, BestMove) :-
 	max_member(BestMove, BestMoves).
 	
 minimax(Level, Level, Move, GameState, Value-Move):-
-	value(GameState, Value),
-	write('CONAA'), nl.
+	value(GameState, Value).
 
 minimax(Level, MaxLevel, CurrentMove, GameState, BestMove) :-
-	write('Hmmmm '), write(Level-MaxLevel),nl,
 	Level > 0,
 	valid_states(GameState, _ListOfStates),
-	length(ListOfStates, 2),
-	append(ListOfStates, _, _ListOfStates),
-	
+	!,
+	get_best_states(_ListOfStates, ListOfStates),
 	NewLevel is Level+1,
 	Caller =.. [minimax, NewLevel, MaxLevel, CurrentMove],
 	maplist(Caller, ListOfStates, BestMoves),
-	write('PILAAA '), write(Level), nl,
 	!,
-	minimax_choose_best(Level, BestMoves, BestMove),
-	write('tudo bem '), write(BestMove), nl.
+	minimax_choose_best(Level, BestMoves, BestMove).
 
 
 
 minimax(Level, GameState, Move) :-
 	Level > 0,
 	valid_all(GameState, _ListOfAll),
-	length(ListOfAll, 2),
-	append(ListOfAll, _, _ListOfAll),
+	
+	random_permutation(_ListOfAll, Permutation),
+	append(_, ListOfAll, Permutation),
+	length(ListOfAll, 4),
 	maplist(get_move_from_all, ListOfAll, ListOfMoves),
 	maplist(get_state_from_all, ListOfAll, ListOfStates),
 	generate_first_best_moves(Level, ListOfMoves, ListOfStates, BestMoves),
-	write('Chegue aqui '), write(BestMoves), nl,
 	minimax_choose_best(_, 0, BestMoves, _Move),
 	_-(A-B-C-D-E-F) = _Move,
-	Move = A-B-C-D-E-F,
-	write('e aqui???' ), write(Move), nl.
+	Move = A-B-C-D-E-F.
 	
 generate_first_best_moves(_, [], [], []).
 generate_first_best_moves(MaxLevel, [CurrentMove | TailMoves], [CurrentState | TailStates], [CurrentBest | TailBests]) :-
